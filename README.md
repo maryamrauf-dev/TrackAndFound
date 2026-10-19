@@ -1,6 +1,6 @@
-# FoundNearMe
+# LostAndFound
 
-FoundNearMe is a campus lost-and-found web app. Users can browse lost and found listings, search and filter them, view their locations on a map, post an item with an optional photo, and contact the person who posted it through WhatsApp.
+LostAndFound is a campus lost-and-found web app. Users can browse lost and found listings, search and filter them, view their locations on a map, post an item with an optional photo, and contact the person who posted it through WhatsApp.
 
 ## Features currently available
 
