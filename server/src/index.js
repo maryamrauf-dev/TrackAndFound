@@ -9,7 +9,8 @@ import itemRoutes from './routes/items.js';
 import adminRoutes from './routes/admin.js';
 
 const app = express();
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
+const clientOrigin = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/+$/, '');
+app.use(cors({ origin: clientOrigin }));
 app.use(express.json({ limit: '1mb' }));
 app.use('/uploads', express.static(uploadDir));
 

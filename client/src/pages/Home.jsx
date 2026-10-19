@@ -19,6 +19,9 @@ export default function Home() {
       try {
         const params = Object.fromEntries(Object.entries(filters).filter(([, v]) => v));
         const { data } = await api.get('/items', { params });
+        if (!Array.isArray(data?.items)) {
+          throw new Error('The API returned an unexpected response. Check the VITE_API_URL setting.');
+        }
         setItems(data.items);
         setState('ready');
       } catch (e) {
