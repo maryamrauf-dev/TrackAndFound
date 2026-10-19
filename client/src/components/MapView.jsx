@@ -4,6 +4,7 @@ import L from 'leaflet';
 import { Link } from 'react-router-dom';
 import 'leaflet/dist/leaflet.css';
 import { CAMPUS, catOf, fmtDate } from '../config.js';
+import { imageSrc } from '../api.js';
 import Icon from './Icon.jsx';
 
 function MapResizer() {
@@ -52,7 +53,7 @@ export default function MapView({ items = [], center, zoom = 16, single }) {
                   <div className="popup-card">
                     {i.imageUrl && (
                       <div className="popup-thumb">
-                        <img src={i.imageUrl} alt={i.title} />
+                        <img src={imageSrc(i.imageUrl)} alt={i.title} />
                       </div>
                     )}
                     <div className="popup-body">

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
-import { api, errMsg } from '../api.js';
+import { api, errMsg, imageSrc } from '../api.js';
 import { catOf, fmtDate, createWhatsAppLink } from '../config.js';
 import ItemCard from '../components/ItemCard.jsx';
 import MapView from '../components/MapView.jsx';
@@ -175,7 +175,7 @@ export default function ItemDetail() {
           <div className="card item-detail-card">
             {item.imageUrl ? (
               <div className="detail-hero-wrap">
-                <img className="hero-img" src={item.imageUrl} alt={item.title} />
+                <img className="hero-img" src={imageSrc(item.imageUrl)} alt={item.title} />
               </div>
             ) : (
               <div className="detail-no-img">

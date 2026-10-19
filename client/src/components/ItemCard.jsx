@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { catOf, fmtDate } from '../config.js';
+import { imageSrc } from '../api.js';
 import Icon from './Icon.jsx';
 
 export default function ItemCard({ item }) {
@@ -14,7 +15,7 @@ export default function ItemCard({ item }) {
     >
       <div className={`thumb thumb-${item.type}`}>
         {item.imageUrl ? (
-          <img src={item.imageUrl} alt={item.title} loading="lazy" />
+          <img src={imageSrc(item.imageUrl)} alt={item.title} loading="lazy" />
         ) : (
           <div className="thumb-placeholder">
             <span className="thumb-icon-wrap" aria-hidden="true">
