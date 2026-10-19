@@ -1,71 +1,38 @@
-# LostAndFound
+# TrackAndFound
 
-LostAndFound is a campus lost-and-found web app. Users can browse lost and found listings, search and filter them, view their locations on a map, post an item with an optional photo, and contact the person who posted it through WhatsApp.
+**A simpler way to reunite campus lost items with the people looking for them.**
 
-## Features currently available
+TrackAndFound is a campus lost-and-found platform where people can post lost or found items, browse and search listings, and contact the person who posted an item through WhatsApp.
 
-- Browse open lost and found listings in a grid or on a map.
-- Search by text and filter by type, category, and date.
-- Register, sign in, post listings, and view your activity.
-- Add an optional photo and campus location label to a listing.
-- Contact the poster of a found item if you recognize it, or contact the owner of a lost item if you found it. Contact is handled through the WhatsApp number supplied with the listing.
-- View possible lost/found matches for your own listings.
-- Use the admin page to review reports, remove listings, and suspend accounts.
-- No AI, automatic ownership verification, or in-app chat is used.
+## What you can do
 
-## Run locally
+- Browse lost and found listings in a grid or on a campus map.
+- Search listings and filter by item type, category, and date.
+- Create an account to post an item with a description, photo, location, and WhatsApp number.
+- See possible lost-and-found matches for your own listings.
+- Contact a listing owner directly through WhatsApp to coordinate a return.
+- Mark an item as returned once it has been reunited with its owner.
+- Report listings and use the moderation tools to manage reports and listings.
 
-Requirements: Node.js 18 or newer and a running MongoDB instance.
+## How it works
 
-### 1. Start the API
+1. Post an item as lost or found, and add enough public detail to help someone recognize it.
+2. Browse the listings or use search and filters to find a possible match.
+3. Open the listing and contact its poster using the WhatsApp link.
+4. Arrange a safe handover directly with the other person.
 
-```powershell
-cd server
-Copy-Item .env.example .env
-npm install
-npm run seed
-npm run dev
-```
+For a found item, someone who recognizes it can contact the finder. For a lost item, the person who finds it can contact the owner.
 
-The API listens on `http://localhost:5000`. Before using it, edit `server/.env` and set a private `JWT_SECRET`, a working `MONGO_URI`, and (if needed) the admin email and password.
+## Matching and privacy
 
-### 2. Start the web app
+Possible matches are suggestions based on shared keywords, item category, location, and date. They are calculated by the application and do not use AI. A suggested match is not confirmation of ownership; people arrange returns directly through WhatsApp.
 
-In a second terminal:
+Only share information that helps identify an item. Avoid posting private identifiers or sensitive personal information in listing text or photos. Meet in a public, well-populated place when arranging a handover, and use care when sharing contact details.
 
-```powershell
-cd client
-Copy-Item .env.example .env
-npm install
-npm run dev
-```
+## Technology
 
-Open `http://localhost:5173`. The Vite development server proxies API and image-upload requests to the local API.
+TrackAndFound is built with React and Vite on the client, and Node.js, Express, and MongoDB on the server. Listings can include map locations and uploaded photos.
 
-Set `VITE_CAMPUS_NAME`, `VITE_CAMPUS_LAT`, and `VITE_CAMPUS_LNG` in `client/.env` to configure the campus name and default map centre.
+## Project status
 
-## Seed accounts
-
-`npm run seed` creates an admin account and a demo student account if they do not already exist. The example environment file and seed script contain development defaults, including predictable demo credentials. **Change the admin password and do not use these defaults for a public deployment.** Seeded accounts are for local development only.
-
-The seed script creates accounts; it does not create sample listings.
-
-## Matching and contact
-
-Possible matches are ranked using keyword overlap, category, location, and date. Matching runs locally in the API and does not use AI or external model services. Contact and handover arrangements take place directly between the person reporting a found item and the listing owner through WhatsApp; no in-app claim review or messaging is provided.
-
-## Deployment notes
-
-The repository does not specify a hosted website URL or production hosting configuration. The Vite proxy is for local development; a deployment must route `/api` and `/uploads` to the API server and configure `CLIENT_URL` for the deployed client origin. Configure production MongoDB and strong secrets, and provide persistent storage for `server/uploads` or replace local uploads with cloud storage.
-
-## Project structure
-
-```text
-client/src/
-  components/  Listing cards, maps, location picker, navigation
-  pages/       Browse, post, item details, activity, admin
-server/src/
-  models/      Users, items, reports
-  routes/      Authentication, items, admin
-  services/    Keyword matching, privacy checks
-```
+TrackAndFound is an actively developed project. Features may change as the platform evolves. There is no public hosted website link provided in this repository.
