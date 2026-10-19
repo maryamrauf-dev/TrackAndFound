@@ -21,8 +21,6 @@ export const catOf = (id) => CATEGORIES.find((c) => c.id === id) || CATEGORIES[C
 export const fmtDate = (d) =>
   new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 
-export const DEFAULT_WHATSAPP = import.meta.env.VITE_DEFAULT_WHATSAPP || '+923001234567';
-
 export const cleanWhatsAppNumber = (raw) => {
   if (!raw) return '';
   let cleaned = String(raw).replace(/[^\d+]/g, '');
@@ -34,6 +32,7 @@ export const cleanWhatsAppNumber = (raw) => {
 };
 
 export const createWhatsAppLink = (number, message) => {
-  const phone = cleanWhatsAppNumber(number || DEFAULT_WHATSAPP);
+  const phone = cleanWhatsAppNumber(number);
+  if (!phone) return '';
   return `https://wa.me/${phone}?text=${encodeURIComponent(message || '')}`;
 };

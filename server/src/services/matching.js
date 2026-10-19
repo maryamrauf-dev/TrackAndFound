@@ -2,16 +2,6 @@ import Item from '../models/Item.js';
 
 const DAY = 86400000;
 
-function cosine(a, b) {
-  let dot = 0, na = 0, nb = 0;
-  for (let i = 0; i < a.length; i++) {
-    dot += a[i] * b[i];
-    na += a[i] * a[i];
-    nb += b[i] * b[i];
-  }
-  return na && nb ? dot / Math.sqrt(na * nb) : 0;
-}
-
 function haversineKm(a, b) {
   if (!a || !b || !Number.isFinite(a.lat) || !Number.isFinite(b.lat)) return 0;
   const R = 6371;
@@ -24,13 +14,9 @@ function haversineKm(a, b) {
 
 const tokens = (s) => new Set(String(s || '').toLowerCase().match(/[a-z0-9]{3,}/g) || []);
 const textOf = (i) =>
-  [i.title, i.category, i.description, i.aiTags?.color, i.aiTags?.brand, ...(i.aiTags?.features || [])].join(' ');
+  [i.title, i.category, i.description].join(' ');
 
 function textSimilarity(a, b) {
-  if (a.embedding?.length && b.embedding?.length) {
-    // Related short texts usually land between 0.25 and 0.75 cosine.
-    return Math.max(0, Math.min(1, (cosine(a.embedding, b.embedding) - 0.25) / 0.5));
-  }
   const ta = tokens(textOf(a));
   const tb = tokens(textOf(b));
   let shared = 0;
@@ -53,7 +39,6 @@ export function scorePair(a, b) {
 export async function findMatches(source, { limit = 5, min = 35 } = {}) {
   const opposite = source.type === 'lost' ? 'found' : 'lost';
   const pool = await Item.find({ type: opposite, status: 'open', _id: { $ne: source._id } })
-    .select('+embedding')
     .sort({ createdAt: -1 })
     .limit(300)
     .lean();
@@ -69,8 +54,5 @@ export async function findMatches(source, { limit = 5, min = 35 } = {}) {
     .filter((m) => m.score >= min)
     .sort((x, y) => y.score - x.score)
     .slice(0, limit)
-    .map(({ item, score }) => {
-      delete item.embedding;
-      return { score, item };
-    });
+    .map(({ item, score }) => ({ score, item }));
 }

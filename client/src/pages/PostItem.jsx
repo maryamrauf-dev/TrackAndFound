@@ -11,7 +11,7 @@ export default function PostItem() {
   const [params] = useSearchParams();
   const [type, setType] = useState(params.get('type') === 'found' ? 'found' : 'lost');
   const [f, setF] = useState({
-    title: '', category: 'other', description: '', hiddenDetails: '',
+    title: '', category: 'other', description: '',
     eventDate: today(), locationLabel: '', custodyNote: '', whatsapp: '',
   });
   const [image, setImage] = useState(null);
@@ -92,24 +92,14 @@ export default function PostItem() {
             placeholder="Colour, size, condition. Keep identifying details out of here." />
         </label>
 
-        <label>WhatsApp / Contact Phone
-          <input type="tel" value={f.whatsapp} onChange={set('whatsapp')} placeholder="e.g. +92 300 1234567 or 03001234567" />
+        <label>WhatsApp number
+          <input type="tel" value={f.whatsapp} onChange={set('whatsapp')} placeholder="e.g. +92 300 1234567 or 03001234567" required />
           <span className="hint">
             {found
-              ? 'When someone clicks "This is mine", they will be directed to this WhatsApp number for safe handover.'
-              : 'When someone finds your item, they can contact you directly on this WhatsApp number to return it.'}
+              ? 'Anyone who recognizes this found item can contact you here to arrange a handover.'
+              : 'Anyone who finds this lost item can contact you here to arrange its return.'}
           </span>
         </label>
-
-        {found && (
-          <div className="private-box">
-            <label>Private proof details (optional)
-              <textarea rows={2} value={f.hiddenDetails} onChange={set('hiddenDetails')} maxLength={600}
-                placeholder="Something only the owner would know: what is inside, a mark, a keychain, a sticker." />
-            </label>
-            <p className="hint">Never shown publicly. Kept for you to easily cross-check when claimant contacts you on WhatsApp.</p>
-          </div>
-        )}
 
         <label>Photo (optional)
           <input type="file" accept="image/jpeg,image/png,image/webp" onChange={pick} />

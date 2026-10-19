@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import User from '../models/User.js';
 import Item from '../models/Item.js';
-import Claim from '../models/Claim.js';
 import Report from '../models/Report.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import { wrap } from '../middleware/wrap.js';
@@ -10,18 +9,16 @@ const router = Router();
 router.use(requireAuth, requireAdmin);
 
 router.get('/overview', wrap(async (req, res) => {
-  const [users, lost, found, returned, openClaims, reviewClaims, reports, recent] = await Promise.all([
+  const [users, lost, found, returned, reports, recent] = await Promise.all([
     User.countDocuments(),
     Item.countDocuments({ type: 'lost', status: 'open' }),
     Item.countDocuments({ type: 'found', status: 'open' }),
     Item.countDocuments({ status: 'returned' }),
-    Claim.countDocuments({ status: 'approved' }),
-    Claim.countDocuments({ status: 'review' }),
     Report.find({ status: 'open' }).sort({ createdAt: -1 }).populate('item', 'title status type').populate('reporter', 'name'),
     Item.find().sort({ createdAt: -1 }).limit(25).populate('owner', 'name banned'),
   ]);
   res.json({
-    stats: { users, lost, found, returned, verifiedClaims: openClaims, claimsInReview: reviewClaims },
+    stats: { users, lost, found, returned },
     reports,
     recent,
   });

@@ -139,7 +139,7 @@ export default function Home() {
           <div className="empty card pad">
             <h3>No listings found</h3>
             <p className="muted">
-              Be the first to post a lost or found item. When someone claims it, you can coordinate safe handover over WhatsApp.
+              Be the first to post a lost or found item. People who recognize a listing can contact its poster on WhatsApp.
             </p>
             <div className="row">
               <Link className="btn btn-primary" to="/post?type=lost">

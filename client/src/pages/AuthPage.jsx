@@ -32,7 +32,7 @@ export default function AuthPage() {
       <div className="card pad">
         <h1>{mode === 'login' ? 'Welcome back' : 'Create your account'}</h1>
         <p className="muted">
-          {mode === 'login' ? 'Sign in to post items and claim yours.' : 'It takes a minute, and it keeps claims honest.'}
+          {mode === 'login' ? 'Sign in to post items and contact people about lost belongings.' : 'Create an account to post lost and found items.'}
         </p>
         <form onSubmit={submit} className="stack">
           {mode === 'register' && (

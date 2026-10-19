@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import { api, errMsg } from '../api.js';
-import { useAuth } from '../auth.jsx';
 import { catOf, fmtDate, createWhatsAppLink } from '../config.js';
 import ItemCard from '../components/ItemCard.jsx';
 import MapView from '../components/MapView.jsx';
@@ -15,45 +14,36 @@ function WhatsAppIcon({ size = 22 }) {
   );
 }
 
-function ClaimPanel({ item, onClaimed, claimed }) {
-  const { user } = useAuth();
+function FoundItemContactPanel({ item, onClaimed, contacted }) {
   const finderName = item.owner?.name || 'the finder';
   const rawPhone = item.whatsapp || item.contactPhone || item.owner?.phone;
   const locationText = item.location?.label ? ` at ${item.location.label}` : '';
   const message = `Hi ${finderName}! I saw your listing for "${item.title}" on FoundNearMe (found${locationText}). This is mine! Can we arrange a time to meet on campus?`;
   const whatsappUrl = createWhatsAppLink(rawPhone, message);
 
-  const handleClaim = () => {
+  const handleContact = () => {
     onClaimed(true);
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
-  if (claimed) {
+  if (contacted) {
     return (
       <div className="card pad claim ok stack">
         <div className="claim-header-badge">
           <span className="wa-status-pill">
-            <Icon name="check_circle" size={16} /> Claim Initiated
+            <Icon name="check_circle" size={16} /> WhatsApp opened
           </span>
         </div>
         <h2>Contact {finderName}</h2>
         <p className="wa-claim-desc">
-          We opened WhatsApp chat with <strong>{finderName}</strong>. If it didn&apos;t open automatically, click the button below to connect directly:
+          If WhatsApp did not open, use the button below to contact <strong>{finderName}</strong>.
         </p>
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn btn-whatsapp"
-        >
-          <WhatsAppIcon size={24} />
-          <span>Chat on WhatsApp</span>
-        </a>
-        {rawPhone && (
-          <p className="hint">
-            <strong>Direct Contact:</strong> {rawPhone}
-          </p>
-        )}
+        {whatsappUrl ? (
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp">
+            <WhatsAppIcon size={24} />
+            <span>Chat on WhatsApp</span>
+          </a>
+        ) : <p className="hint">No WhatsApp number was provided for this listing.</p>}
         <div className="handover-tips">
           <strong>Safe Campus Handover Tip:</strong>
           <p>Agree to meet at a populated campus location such as the library desk, cafeteria, or security office.</p>
@@ -66,29 +56,21 @@ function ClaimPanel({ item, onClaimed, claimed }) {
     <div className="card pad claim stack">
       <h2>Is this yours?</h2>
       <p className="muted">
-        Click below to claim this item. You will be connected directly with <strong>{finderName}</strong> on WhatsApp to verify and arrange a safe handover.
+        If this item is yours, contact <strong>{finderName}</strong> on WhatsApp to arrange a safe handover.
       </p>
-      <button className="btn btn-primary btn-claim" onClick={handleClaim}>
-        <Icon name="check" size={18} /> This is mine
-      </button>
-      <p className="hint">
-        Direct WhatsApp chat enables fast coordination with the finder.
-      </p>
+      {whatsappUrl
+        ? <button className="btn btn-primary btn-claim" onClick={handleContact}><Icon name="check" size={18} /> Contact on WhatsApp</button>
+        : <p className="hint">No WhatsApp number was provided for this listing.</p>}
     </div>
   );
 }
 
-function LostItemContactPanel({ item, onClaimed }) {
+function LostItemContactPanel({ item }) {
   const ownerName = item.owner?.name || 'the owner';
   const rawPhone = item.whatsapp || item.contactPhone || item.owner?.phone;
   const locationText = item.location?.label ? ` near ${item.location.label}` : '';
   const message = `Hi ${ownerName}! I saw your post on FoundNearMe about your lost "${item.title}" (${locationText}). I found it! Can we arrange to return it to you?`;
   const whatsappUrl = createWhatsAppLink(rawPhone, message);
-
-  const handleContact = () => {
-    onClaimed(true);
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-  };
 
   return (
     <div className="card pad claim stack">
@@ -96,10 +78,9 @@ function LostItemContactPanel({ item, onClaimed }) {
       <p className="muted">
         Connect directly with <strong>{ownerName}</strong> on WhatsApp to let them know their item is safe.
       </p>
-      <button className="btn btn-whatsapp" onClick={handleContact}>
-        <WhatsAppIcon size={22} />
-        <span>Contact {ownerName} on WhatsApp</span>
-      </button>
+      {whatsappUrl
+        ? <a className="btn btn-whatsapp" href={whatsappUrl} target="_blank" rel="noopener noreferrer"><WhatsAppIcon size={22} /><span>Contact {ownerName} on WhatsApp</span></a>
+        : <p className="hint">No WhatsApp number was provided for this listing.</p>}
       <Link className="btn btn-quiet" to="/post?type=found">
         Post as found item
       </Link>
@@ -122,12 +103,6 @@ function OwnerPanel({ item, reload }) {
   return (
     <div className="card pad stack">
       <h2>Your listing</h2>
-      {item.hiddenDetails && (
-        <div className="private-box">
-          <strong>Private proof details</strong>
-          <p>{item.hiddenDetails}</p>
-        </div>
-      )}
       {(item.whatsapp || item.contactPhone) && (
         <p className="hint">
           <strong>Your WhatsApp Contact:</strong> {item.whatsapp || item.contactPhone}
@@ -155,11 +130,10 @@ function OwnerPanel({ item, reload }) {
 
 export default function ItemDetail() {
   const { id } = useParams();
-  const { user } = useAuth();
   const nav = useNavigate();
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
-  const [claimed, setClaimed] = useState(false);
+  const [contacted, setContacted] = useState(false);
 
   const load = () =>
     api.get(`/items/${id}`).then((r) => setData(r.data)).catch((e) => setError(errMsg(e)));
@@ -187,10 +161,6 @@ export default function ItemDetail() {
   if (!data) return <p className="muted">Loading listing details...</p>;
   const { item, isOwner } = data;
   const cat = catOf(item.category);
-  const contactPerson = item.owner?.name || (item.type === 'found' ? 'Finder' : 'Owner');
-  const rawPhone = item.whatsapp || item.contactPhone || item.owner?.phone;
-  const waMessage = `Hi ${contactPerson}! I saw your post "${item.title}" on FoundNearMe. ${item.type === 'found' ? 'This is mine!' : 'I found this!'} Can we chat to coordinate?`;
-  const whatsappUrl = createWhatsAppLink(rawPhone, waMessage);
 
   return (
     <div className="stack gap">
@@ -245,11 +215,6 @@ export default function ItemDetail() {
                 <p>{item.description}</p>
               </div>
 
-              {item.aiTags?.summary && (
-                <p className="tags muted">
-                  Photo details: {[item.aiTags.color, item.aiTags.brand !== 'unknown' && item.aiTags.brand, ...(item.aiTags.features || [])].filter(Boolean).join(', ')}
-                </p>
-              )}
               {item.custodyNote && (
                 <p className="custody">
                   <Icon name="place" size={18} />
@@ -276,10 +241,10 @@ export default function ItemDetail() {
         <aside className="detail-side">
           {isOwner && <OwnerPanel item={item} reload={load} />}
           {!isOwner && item.type === 'found' && item.status === 'open' && (
-            <ClaimPanel item={item} onClaimed={setClaimed} claimed={claimed} />
+            <FoundItemContactPanel item={item} onClaimed={setContacted} contacted={contacted} />
           )}
           {!isOwner && item.type === 'lost' && item.status === 'open' && (
-            <LostItemContactPanel item={item} onClaimed={setClaimed} />
+            <LostItemContactPanel item={item} />
           )}
           {item.status === 'returned' && (
             <div className="card pad stack">
@@ -290,24 +255,6 @@ export default function ItemDetail() {
         </aside>
       </div>
 
-      {/* Floating WhatsApp Action Icon on Bottom Right */}
-      {!isOwner && item.status === 'open' && (
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`floating-wa-btn ${claimed ? 'wa-pulse' : ''}`}
-          aria-label={`Chat with ${contactPerson} on WhatsApp`}
-          title={`Chat with ${contactPerson} on WhatsApp`}
-          onClick={() => setClaimed(true)}
-        >
-          <WhatsAppIcon size={32} />
-          <span className="floating-wa-label">
-            Contact {contactPerson}
-          </span>
-          <span className="floating-wa-badge" aria-hidden="true">1</span>
-        </a>
-      )}
     </div>
   );
 }

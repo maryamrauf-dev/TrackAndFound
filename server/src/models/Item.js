@@ -11,16 +11,7 @@ const itemSchema = new mongoose.Schema(
     title: { type: String, required: true, trim: true, maxlength: 80 },
     category: { type: String, enum: CATEGORIES, required: true },
     description: { type: String, required: true, trim: true, maxlength: 600 },
-    // Private proof details. Never returned unless explicitly selected.
-    hiddenDetails: { type: String, select: false, maxlength: 600 },
     imageUrl: String,
-    aiTags: {
-      color: String,
-      brand: String,
-      features: [String],
-      summary: String,
-    },
-    embedding: { type: [Number], select: false },
     location: {
       label: { type: String, trim: true, maxlength: 100 },
       lat: { type: Number, default: 34.33 },

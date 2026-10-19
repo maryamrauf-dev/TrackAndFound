@@ -19,7 +19,7 @@ export default function Admin() {
     <div className="stack gap">
       <h1>Moderation</h1>
       <div className="stats">
-        {[['Open lost', s.lost], ['Open found', s.found], ['Returned', s.returned], ['Verified claims', s.verifiedClaims], ['Claims in review', s.claimsInReview], ['Users', s.users]].map(([l, v]) => (
+        {[['Open lost', s.lost], ['Open found', s.found], ['Returned', s.returned], ['Users', s.users]].map(([l, v]) => (
           <div key={l} className="card stat"><strong>{v}</strong><span className="muted">{l}</span></div>
         ))}
       </div>

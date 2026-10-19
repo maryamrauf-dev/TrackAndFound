@@ -1,6 +1,6 @@
 # FoundNearMe
 
-FoundNearMe is a campus lost-and-found web app. Users can browse lost and found listings, search and filter them, view their locations on a map, post an item with an optional photo, and contact the other person through WhatsApp.
+FoundNearMe is a campus lost-and-found web app. Users can browse lost and found listings, search and filter them, view their locations on a map, post an item with an optional photo, and contact the person who posted it through WhatsApp.
 
 ## Features currently available
 
@@ -8,11 +8,10 @@ FoundNearMe is a campus lost-and-found web app. Users can browse lost and found 
 - Search by text and filter by type, category, and date.
 - Register, sign in, post listings, and view your activity.
 - Add an optional photo and campus location label to a listing.
-- Contact the finder or owner directly through the WhatsApp number supplied with a listing.
+- Contact the poster of a found item if you recognize it, or contact the owner of a lost item if you found it. Contact is handled through the WhatsApp number supplied with the listing.
 - View possible lost/found matches for your own listings.
 - Use the admin page to review reports, remove listings, and suspend accounts.
-
-**Claim verification is not connected to the current item-page UI.** The server contains claim-question and chat APIs, but clicking “This is mine” currently opens WhatsApp directly. Do not rely on the question-based verification or in-app chat flow being active in the website.
+- No AI, automatic ownership verification, or in-app chat is used.
 
 ## Run locally
 
@@ -41,7 +40,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`. The Vite development server proxies API, upload, and Socket.IO requests to the local API.
+Open `http://localhost:5173`. The Vite development server proxies API and image-upload requests to the local API.
 
 Set `VITE_CAMPUS_NAME`, `VITE_CAMPUS_LAT`, and `VITE_CAMPUS_LNG` in `client/.env` to configure the campus name and default map centre.
 
@@ -51,25 +50,22 @@ Set `VITE_CAMPUS_NAME`, `VITE_CAMPUS_LAT`, and `VITE_CAMPUS_LNG` in `client/.env
 
 The seed script creates accounts; it does not create sample listings.
 
-## Optional AI features
+## Matching and contact
 
-Set `OPENAI_API_KEY` in `server/.env` to enable photo tagging and embeddings. Without a key, matching uses keyword overlap. The server also contains keyword-based fallback claim grading, but claim verification is not currently connected to the website's item-page flow.
-
-The optional model settings are `OPENAI_CHAT_MODEL` and `OPENAI_EMBED_MODEL`. Claim API thresholds can be set with `APPROVE_AT`, `REVIEW_AT`, and `MAX_ATTEMPTS`.
+Possible matches are ranked using keyword overlap, category, location, and date. Matching runs locally in the API and does not use AI or external model services. Contact and handover arrangements take place directly between the person reporting a found item and the listing owner through WhatsApp; no in-app claim review or messaging is provided.
 
 ## Deployment notes
 
-The repository does not specify a hosted website URL or production hosting configuration. The Vite proxy is for local development; a deployment must route `/api`, `/uploads`, and `/socket.io` to the API server and configure `CLIENT_URL` for the deployed client origin. Configure production MongoDB and strong secrets, and provide persistent storage for `server/uploads` or replace local uploads with cloud storage.
+The repository does not specify a hosted website URL or production hosting configuration. The Vite proxy is for local development; a deployment must route `/api` and `/uploads` to the API server and configure `CLIENT_URL` for the deployed client origin. Configure production MongoDB and strong secrets, and provide persistent storage for `server/uploads` or replace local uploads with cloud storage.
 
 ## Project structure
 
 ```text
 client/src/
   components/  Listing cards, maps, location picker, navigation
-  pages/       Browse, post, item details, activity, admin, chat
+  pages/       Browse, post, item details, activity, admin
 server/src/
-  models/      Users, items, claims, messages, reports
-  routes/      Authentication, items, claims, admin
-  services/    AI helpers, matching, privacy checks
-  socket.js    Authenticated Socket.IO chat
+  models/      Users, items, reports
+  routes/      Authentication, items, admin
+  services/    Keyword matching, privacy checks
 ```

@@ -5,13 +5,12 @@ import Report from '../models/Report.js';
 import { requireAuth } from '../middleware/auth.js';
 import { upload } from '../middleware/upload.js';
 import { wrap } from '../middleware/wrap.js';
-import { describeImage, embed } from '../services/llm.js';
 import { findMatches } from '../services/matching.js';
 import { findSensitive } from '../services/privacy.js';
 
 const router = Router();
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const populateOwner = { path: 'owner', select: 'name email phone' };
+const populateOwner = { path: 'owner', select: 'name phone' };
 
 // Reads the token if present, without forcing sign-in.
 function viewer(req) {
@@ -35,7 +34,7 @@ router.get('/', wrap(async (req, res) => {
   }
   if (q?.trim()) {
     const re = new RegExp(escapeRe(q.trim()), 'i');
-    filter.$or = [{ title: re }, { description: re }, { 'location.label': re }, { 'aiTags.color': re }, { 'aiTags.brand': re }];
+    filter.$or = [{ title: re }, { description: re }, { 'location.label': re }];
   }
   const items = await Item.find(filter).sort({ eventDate: -1, createdAt: -1 }).limit(200).populate(populateOwner);
   res.json({ items });
@@ -52,7 +51,6 @@ router.post('/', requireAuth, upload.single('image'), wrap(async (req, res) => {
     title,
     category,
     description,
-    hiddenDetails,
     custodyNote,
     eventDate,
     locationLabel,
@@ -71,12 +69,17 @@ router.post('/', requireAuth, upload.single('image'), wrap(async (req, res) => {
   if (!title?.trim() || !description?.trim() || !CATEGORIES.includes(category)) {
     return res.status(400).json({ error: 'Add a title, a category and a description' });
   }
+  const phone = String(whatsapp || contactPhone || '').trim();
+  const phoneDigits = phone.replace(/\D/g, '');
+  if (phoneDigits.length < 7 || phoneDigits.length > 15) {
+    return res.status(400).json({ error: 'Add a WhatsApp number so people can contact you about this item' });
+  }
   if (!eventDate || Number.isNaN(new Date(eventDate).getTime())) return res.status(400).json({ error: 'Add the date' });
 
   const sensitive = findSensitive(title, description, locationLabel, custodyNote);
   if (sensitive) {
     return res.status(400).json({
-      error: `Your public text seems to include ${sensitive}. Remove it from the public fields. For found items, put proof details in the private box instead.`,
+      error: `Your listing text seems to include ${sensitive}. Remove it before posting.`,
     });
   }
 
@@ -85,7 +88,6 @@ router.post('/', requireAuth, upload.single('image'), wrap(async (req, res) => {
     title,
     category,
     description,
-    hiddenDetails: type === 'found' ? hiddenDetails : undefined,
     custodyNote: type === 'found' ? custodyNote : undefined,
     contactPhone: contactPhone || whatsapp || undefined,
     whatsapp: whatsapp || contactPhone || undefined,
@@ -96,20 +98,6 @@ router.post('/', requireAuth, upload.single('image'), wrap(async (req, res) => {
 
   if (req.file) {
     item.imageUrl = `/uploads/${req.file.filename}`;
-    try {
-      item.aiTags = await describeImage(req.file.path);
-    } catch (e) {
-      console.error('describeImage failed:', e.message);
-    }
-  }
-  try {
-    const vector = await embed(
-      [title, category, description, item.aiTags?.color, item.aiTags?.brand, ...(item.aiTags?.features || [])]
-        .filter(Boolean).join('. ')
-    );
-    if (vector) item.embedding = vector;
-  } catch (e) {
-    console.error('embed failed:', e.message);
   }
 
   await item.save();
@@ -117,17 +105,16 @@ router.post('/', requireAuth, upload.single('image'), wrap(async (req, res) => {
 }));
 
 router.get('/:id', wrap(async (req, res) => {
-  const item = await Item.findById(req.params.id).select('+hiddenDetails').populate(populateOwner);
+  const item = await Item.findById(req.params.id).populate(populateOwner);
   if (!item || item.status === 'removed') return res.status(404).json({ error: 'This listing is not available' });
   const v = viewer(req);
   const mine = v && String(item.owner._id) === v.id;
   const out = item.toObject();
-  if (!mine) delete out.hiddenDetails;
   res.json({ item: out, isOwner: Boolean(mine) });
 }));
 
 router.get('/:id/matches', requireAuth, wrap(async (req, res) => {
-  const item = await Item.findById(req.params.id).select('+embedding');
+  const item = await Item.findById(req.params.id);
   if (!item) return res.status(404).json({ error: 'Not found' });
   if (String(item.owner) !== req.user.id && req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Only the poster can see matches' });
